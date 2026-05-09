@@ -1,0 +1,8 @@
+.pycache/
+__pycache__/
+.DS_Store
+build/
+pet_config.json
+assets/cat.gif
+assets/local_media/
+assets/**/*.iconset/
