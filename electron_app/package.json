@@ -1,0 +1,43 @@
+{
+  "name": "desktop-cat-pet-windows",
+  "version": "1.0.0",
+  "description": "Portable Windows desktop pet app for transparent GIF/WebM/PNG media.",
+  "main": "src/main.js",
+  "author": "titi14gj",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.titi14gj.desktopcatpet",
+    "productName": "Desktop Cat Pet",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "DesktopCatPet-${version}-portable.exe"
+    }
+  }
+}

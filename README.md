@@ -22,6 +22,28 @@ python3 desktop_pet.py
 python3 desktop_pet.py --solid
 ```
 
+## Windows 绿色版
+
+Windows/Electron 版本在：
+
+```text
+electron_app/
+```
+
+在 Windows 上安装 Node.js LTS 后：
+
+```bash
+cd electron_app
+npm install
+npm run dist:win
+```
+
+会生成绿色免安装 exe：
+
+```text
+electron_app/dist/DesktopCatPet-1.0.0-portable.exe
+```
+
 ## 使用你的猫咪动画
 
 把生成好的猫咪跳舞 GIF 放到：

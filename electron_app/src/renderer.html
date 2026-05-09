@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desktop Cat Pet</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="pet-surface">
+      <section id="stage">
+        <img id="image-player" alt="" draggable="false" />
+        <video id="video-player" muted loop playsinline></video>
+        <div id="empty-state">Add transparent media</div>
+      </section>
+
+      <aside id="settings" hidden>
+        <header>
+          <strong>Media Library</strong>
+          <button id="close-settings" type="button">Close</button>
+        </header>
+
+        <div class="toolbar">
+          <button id="add-media" type="button">Add GIF/WebM/PNG</button>
+          <button id="remove-media" type="button">Remove</button>
+        </div>
+
+        <div class="library">
+          <ul id="media-list"></ul>
+          <div id="preview">
+            <img id="preview-image" alt="" />
+            <video id="preview-video" muted loop playsinline></video>
+          </div>
+        </div>
+
+        <label>
+          Playback
+          <select id="playback-mode">
+            <option value="single">Single</option>
+            <option value="sequential">Sequential</option>
+            <option value="shuffle">Shuffle</option>
+          </select>
+        </label>
+
+        <label>
+          Rotate sec
+          <input id="rotate-seconds" type="number" min="5" max="3600" step="5" />
+        </label>
+
+        <label>
+          Size
+          <input id="pet-size" type="range" min="96" max="720" />
+        </label>
+
+        <label>
+          Speed
+          <input id="play-speed" type="range" min="0.25" max="2" step="0.05" />
+        </label>
+
+        <label class="check">
+          <input id="always-on-top" type="checkbox" />
+          Always on top
+        </label>
+
+        <button id="quit" type="button">Quit</button>
+      </aside>
+    </main>
+    <script src="./renderer.js"></script>
+  </body>
+</html>
