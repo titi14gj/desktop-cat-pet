@@ -1,71 +1,41 @@
-const STORAGE_KEY = 'desktop-cat-pet-windows-state';
-
-const state = {
-  media: [],
-  currentIndex: -1,
-  playbackMode: 'single',
-  rotateSeconds: 60,
-  size: 320,
-  speed: 1,
-  alwaysOnTop: true
-};
-
+let state = null;
 let rotateTimer = null;
 
 const els = {
-  settings: document.getElementById('settings'),
+  stage: document.getElementById('stage'),
   imagePlayer: document.getElementById('image-player'),
   videoPlayer: document.getElementById('video-player'),
-  emptyState: document.getElementById('empty-state'),
-  mediaList: document.getElementById('media-list'),
-  previewImage: document.getElementById('preview-image'),
-  previewVideo: document.getElementById('preview-video'),
-  addMedia: document.getElementById('add-media'),
-  removeMedia: document.getElementById('remove-media'),
-  playbackMode: document.getElementById('playback-mode'),
-  rotateSeconds: document.getElementById('rotate-seconds'),
-  petSize: document.getElementById('pet-size'),
-  playSpeed: document.getElementById('play-speed'),
-  alwaysOnTop: document.getElementById('always-on-top'),
-  closeSettings: document.getElementById('close-settings'),
-  quit: document.getElementById('quit')
+  emptyState: document.getElementById('empty-state')
 };
 
-function loadState() {
-  try {
-    Object.assign(state, JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
-  } catch {
-    // Keep defaults.
-  }
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function fileName(filePath) {
-  if (typeof filePath === 'object' && filePath?.name) return filePath.name;
-  return String(filePath).split(/[\\/]/).pop();
-}
-
-function mediaPath(item) {
-  return typeof item === 'object' ? item.path : item;
-}
-
 function mediaType(item) {
-  if (typeof item === 'object' && item?.kind) return item.kind;
-  const ext = String(item).split('.').pop().toLowerCase();
-  return ext === 'webm' ? 'video' : 'image';
+  return item?.kind || (String(item?.path || item).toLowerCase().endsWith('.webm') ? 'video' : 'image');
 }
 
 function mediaSrc(item) {
-  if (typeof item === 'object' && item?.url) return item.url;
-  return `file:///${String(item).replace(/\\/g, '/')}`;
+  return item?.url || `file:///${String(item?.path || item).replace(/\\/g, '/')}`;
 }
 
 function currentMedia() {
-  if (state.currentIndex < 0 || state.currentIndex >= state.media.length) return null;
+  if (!state || state.currentIndex < 0 || state.currentIndex >= state.media.length) return null;
   return state.media[state.currentIndex];
+}
+
+function applyCrop() {
+  const crop = state?.crop || { enabled: false, zoom: 1, offsetX: 0, offsetY: 0 };
+  const zoom = crop.enabled ? crop.zoom : 1;
+  const offsetX = crop.enabled ? crop.offsetX : 0;
+  const offsetY = crop.enabled ? crop.offsetY : 0;
+  const transform = `translate(${offsetX}%, ${offsetY}%) scale(${zoom})`;
+
+  for (const player of [els.imagePlayer, els.videoPlayer]) {
+    player.style.transform = transform;
+    player.style.maxWidth = crop.enabled ? 'none' : '100%';
+    player.style.maxHeight = crop.enabled ? 'none' : '100%';
+    player.style.width = crop.enabled ? '100%' : '';
+    player.style.height = crop.enabled ? '100%' : '';
+    player.style.objectFit = crop.enabled ? 'cover' : 'contain';
+  }
 }
 
 function renderPlayer() {
@@ -90,148 +60,48 @@ function renderPlayer() {
   }
 }
 
-function renderList() {
-  els.mediaList.innerHTML = '';
-  state.media.forEach((item, index) => {
-    const li = document.createElement('li');
-    li.textContent = fileName(item);
-    li.title = mediaPath(item);
-    li.className = index === state.currentIndex ? 'selected' : '';
-    li.addEventListener('click', () => {
-      state.currentIndex = index;
-      saveState();
-      renderAll();
-    });
-    els.mediaList.appendChild(li);
-  });
-}
-
-function renderPreview() {
-  const item = currentMedia();
-  els.previewImage.hidden = true;
-  els.previewVideo.hidden = true;
-  els.previewVideo.pause();
-  els.previewVideo.removeAttribute('src');
-  els.previewImage.removeAttribute('src');
-  if (!item) return;
-
-  if (mediaType(item) === 'video') {
-    els.previewVideo.src = mediaSrc(item);
-    els.previewVideo.hidden = false;
-    els.previewVideo.play().catch(() => {});
-  } else {
-    els.previewImage.src = mediaSrc(item);
-    els.previewImage.hidden = false;
-  }
-}
-
 function restartRotation() {
   clearInterval(rotateTimer);
   rotateTimer = null;
-  if (state.playbackMode === 'single' || state.media.length <= 1) return;
+  if (!state || state.playbackMode === 'single' || state.media.length <= 1) return;
   rotateTimer = setInterval(advanceMedia, Math.max(5, state.rotateSeconds) * 1000);
 }
 
 function advanceMedia() {
-  if (state.media.length <= 1) return;
+  if (!state || state.media.length <= 1) return;
+
+  let currentIndex = state.currentIndex;
   if (state.playbackMode === 'shuffle') {
-    let next = state.currentIndex;
-    while (next === state.currentIndex) {
-      next = Math.floor(Math.random() * state.media.length);
+    while (currentIndex === state.currentIndex) {
+      currentIndex = Math.floor(Math.random() * state.media.length);
     }
-    state.currentIndex = next;
   } else if (state.playbackMode === 'sequential') {
-    state.currentIndex = (state.currentIndex + 1) % state.media.length;
+    currentIndex = (state.currentIndex + 1) % state.media.length;
   }
-  saveState();
-  renderAll();
+
+  window.desktopPet.updateState({ currentIndex });
 }
 
-function renderControls() {
-  els.playbackMode.value = state.playbackMode;
-  els.rotateSeconds.value = state.rotateSeconds;
-  els.petSize.value = state.size;
-  els.playSpeed.value = state.speed;
-  els.alwaysOnTop.checked = state.alwaysOnTop;
-}
-
-function renderAll() {
-  renderPlayer();
-  renderList();
-  renderPreview();
-  renderControls();
+function render(nextState) {
+  const previousPath = currentMedia()?.path;
+  state = nextState;
+  const nextPath = currentMedia()?.path;
+  if (previousPath !== nextPath) renderPlayer();
+  els.videoPlayer.playbackRate = state.speed;
+  applyCrop();
   restartRotation();
-}
-
-async function addMedia() {
-  const selected = await window.desktopPet.chooseMedia();
-  for (const item of selected) {
-    const selectedPath = mediaPath(item);
-    const exists = state.media.some((existing) => mediaPath(existing) === selectedPath);
-    if (!exists) state.media.push(item);
-  }
-  if (state.currentIndex === -1 && state.media.length > 0) state.currentIndex = 0;
-  saveState();
-  renderAll();
-}
-
-function removeMedia() {
-  if (state.currentIndex < 0) return;
-  state.media.splice(state.currentIndex, 1);
-  state.currentIndex = Math.min(state.currentIndex, state.media.length - 1);
-  saveState();
-  renderAll();
 }
 
 document.addEventListener('contextmenu', (event) => {
   event.preventDefault();
-  els.settings.hidden = false;
+  window.desktopPet.openSettings();
 });
 
-els.closeSettings.addEventListener('click', () => {
-  els.settings.hidden = true;
-});
+window.desktopPet.onStateUpdated(render);
 
-els.addMedia.addEventListener('click', addMedia);
-els.removeMedia.addEventListener('click', removeMedia);
-
-els.playbackMode.addEventListener('change', () => {
-  state.playbackMode = els.playbackMode.value;
-  saveState();
+window.desktopPet.getState().then((nextState) => {
+  state = nextState;
+  renderPlayer();
+  applyCrop();
   restartRotation();
 });
-
-els.rotateSeconds.addEventListener('change', () => {
-  state.rotateSeconds = Math.max(5, Number(els.rotateSeconds.value) || 60);
-  saveState();
-  restartRotation();
-});
-
-els.petSize.addEventListener('input', () => {
-  state.size = Number(els.petSize.value);
-  saveState();
-  window.desktopPet.setWindowSize(state.size);
-});
-
-els.playSpeed.addEventListener('input', () => {
-  state.speed = Number(els.playSpeed.value);
-  els.videoPlayer.playbackRate = state.speed;
-  saveState();
-});
-
-els.alwaysOnTop.addEventListener('change', () => {
-  state.alwaysOnTop = els.alwaysOnTop.checked;
-  saveState();
-  window.desktopPet.setAlwaysOnTop(state.alwaysOnTop);
-});
-
-els.quit.addEventListener('click', () => window.desktopPet.quit());
-
-window.desktopPet.onShowSettings(() => {
-  els.settings.hidden = false;
-});
-
-loadState();
-window.desktopPet.setWindowSize(state.size);
-window.desktopPet.setAlwaysOnTop(state.alwaysOnTop);
-renderAll();
