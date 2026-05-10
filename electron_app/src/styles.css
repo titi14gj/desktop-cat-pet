@@ -10,7 +10,7 @@ body,
   margin: 0;
   overflow: hidden;
   background: transparent;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
 }
 
 #pet-surface {
@@ -59,11 +59,11 @@ body,
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: 8px;
-  background: rgba(250, 250, 250, 0.96);
+  background: rgba(249, 249, 249, 0.97);
   color: #1f1f1f;
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.18);
   -webkit-app-region: no-drag;
 }
 
@@ -89,10 +89,44 @@ input {
 
 button {
   min-height: 28px;
-  border: 1px solid rgba(0, 0, 0, 0.22);
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
   border-radius: 6px;
   background: #fff;
   color: #151515;
+}
+
+button:hover {
+  background: #f3f3f3;
+}
+
+button:active {
+  background: #e9e9e9;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #0067c0;
+  outline-offset: 2px;
+}
+
+select,
+input[type="number"] {
+  min-height: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 4px;
+  background: #fff;
+  color: #1f1f1f;
+}
+
+input[type="number"] {
+  width: 86px;
+  padding: 0 6px;
+}
+
+input[type="range"] {
+  width: 148px;
 }
 
 .library {
@@ -117,6 +151,7 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: default;
 }
 
 #media-list li.selected {
