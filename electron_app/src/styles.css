@@ -3,82 +3,11 @@
 }
 
 html,
-body,
-#pet-surface {
+body {
   width: 100%;
   height: 100%;
   margin: 0;
-  overflow: hidden;
-  background: transparent;
   font-family: "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
-}
-
-#pet-surface {
-  position: relative;
-  user-select: none;
-}
-
-#stage {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  -webkit-app-region: drag;
-}
-
-#image-player,
-#video-player {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-#image-player[hidden],
-#video-player[hidden],
-#empty-state[hidden] {
-  display: none;
-}
-
-#empty-state {
-  width: min(86%, 280px);
-  padding: 14px 16px;
-  border: 1px solid rgba(40, 40, 40, 0.18);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  text-align: center;
-  font-size: 13px;
-  -webkit-app-region: no-drag;
-}
-
-#settings {
-  position: absolute;
-  inset: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  border-radius: 8px;
-  background: rgba(249, 249, 249, 0.97);
-  color: #1f1f1f;
-  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.18);
-  -webkit-app-region: no-drag;
-}
-
-#settings[hidden] {
-  display: none;
-}
-
-header,
-.toolbar,
-label,
-.check {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 button,
@@ -88,7 +17,7 @@ input {
 }
 
 button {
-  min-height: 28px;
+  min-height: 30px;
   padding: 0 12px;
   border: 1px solid rgba(0, 0, 0, 0.18);
   border-radius: 6px;
@@ -113,7 +42,7 @@ input:focus-visible {
 
 select,
 input[type="number"] {
-  min-height: 28px;
+  min-height: 30px;
   border: 1px solid rgba(0, 0, 0, 0.22);
   border-radius: 4px;
   background: #fff;
@@ -121,22 +50,139 @@ input[type="number"] {
 }
 
 input[type="number"] {
-  width: 86px;
+  width: 92px;
   padding: 0 6px;
 }
 
 input[type="range"] {
-  width: 148px;
+  width: 180px;
+}
+
+.pet-window {
+  overflow: hidden;
+  background: transparent;
+}
+
+#pet-surface {
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  -webkit-app-region: drag;
+}
+
+#image-player,
+#video-player {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+#image-player[hidden],
+#video-player[hidden],
+#empty-state[hidden],
+#preview img[hidden],
+#preview video[hidden] {
+  display: none;
+}
+
+#empty-state {
+  width: min(86%, 280px);
+  padding: 14px 16px;
+  border: 1px solid rgba(40, 40, 40, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  text-align: center;
+  font-size: 13px;
+  -webkit-app-region: no-drag;
+}
+
+.settings-window {
+  overflow: auto;
+  background: #f9f9f9;
+  color: #1f1f1f;
+}
+
+#settings-page {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.settings-title,
+.panel-title,
+label,
+.check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.settings-title {
+  padding-bottom: 2px;
+}
+
+.settings-title div {
+  min-width: 0;
+}
+
+.settings-title strong {
+  display: block;
+  font-size: 15px;
+}
+
+.settings-title span {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  color: #606060;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+.control-grid label {
+  min-height: 32px;
 }
 
 .library {
   display: grid;
-  grid-template-columns: 1fr 118px;
+  grid-template-columns: minmax(0, 1fr) 130px;
   gap: 10px;
-  min-height: 118px;
+  min-height: 140px;
 }
 
 #media-list {
+  min-height: 140px;
+  max-height: 190px;
   margin: 0;
   padding: 0;
   overflow: auto;
@@ -146,12 +192,12 @@ input[type="range"] {
 }
 
 #media-list li {
-  padding: 7px 8px;
+  padding: 8px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  white-space: nowrap;
+  cursor: default;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: default;
+  white-space: nowrap;
 }
 
 #media-list li.selected {
@@ -161,6 +207,8 @@ input[type="range"] {
 
 #preview {
   display: grid;
+  min-height: 140px;
+  overflow: hidden;
   place-items: center;
   border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: 6px;
@@ -179,9 +227,4 @@ input[type="range"] {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-#preview img[hidden],
-#preview video[hidden] {
-  display: none;
 }
