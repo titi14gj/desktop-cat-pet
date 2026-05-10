@@ -44,17 +44,23 @@ function saveState() {
 }
 
 function fileName(filePath) {
-  return filePath.split(/[\\/]/).pop();
+  if (typeof filePath === 'object' && filePath?.name) return filePath.name;
+  return String(filePath).split(/[\\/]/).pop();
 }
 
-function mediaType(filePath) {
-  const ext = filePath.split('.').pop().toLowerCase();
-  if (ext === 'webm') return 'video';
-  return 'image';
+function mediaPath(item) {
+  return typeof item === 'object' ? item.path : item;
 }
 
-function mediaSrc(filePath) {
-  return `file:///${filePath.replace(/\\/g, '/')}`;
+function mediaType(item) {
+  if (typeof item === 'object' && item?.kind) return item.kind;
+  const ext = String(item).split('.').pop().toLowerCase();
+  return ext === 'webm' ? 'video' : 'image';
+}
+
+function mediaSrc(item) {
+  if (typeof item === 'object' && item?.url) return item.url;
+  return `file:///${String(item).replace(/\\/g, '/')}`;
 }
 
 function currentMedia() {
@@ -89,7 +95,7 @@ function renderList() {
   state.media.forEach((item, index) => {
     const li = document.createElement('li');
     li.textContent = fileName(item);
-    li.title = item;
+    li.title = mediaPath(item);
     li.className = index === state.currentIndex ? 'selected' : '';
     li.addEventListener('click', () => {
       state.currentIndex = index;
@@ -160,7 +166,9 @@ function renderAll() {
 async function addMedia() {
   const selected = await window.desktopPet.chooseMedia();
   for (const item of selected) {
-    if (!state.media.includes(item)) state.media.push(item);
+    const selectedPath = mediaPath(item);
+    const exists = state.media.some((existing) => mediaPath(existing) === selectedPath);
+    if (!exists) state.media.push(item);
   }
   if (state.currentIndex === -1 && state.media.length > 0) state.currentIndex = 0;
   saveState();
@@ -218,6 +226,10 @@ els.alwaysOnTop.addEventListener('change', () => {
 });
 
 els.quit.addEventListener('click', () => window.desktopPet.quit());
+
+window.desktopPet.onShowSettings(() => {
+  els.settings.hidden = false;
+});
 
 loadState();
 window.desktopPet.setWindowSize(state.size);
