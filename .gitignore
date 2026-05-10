@@ -6,3 +6,5 @@ pet_config.json
 assets/cat.gif
 assets/local_media/
 assets/**/*.iconset/
+electron_app/node_modules/
+electron_app/dist/
