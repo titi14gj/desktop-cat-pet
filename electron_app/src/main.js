@@ -208,7 +208,7 @@ function createPetWindow() {
     y: Math.round(height / 2 - size / 2),
     transparent: true,
     frame: false,
-    resizable: true,
+    resizable: false,
     show: false,
     hasShadow: false,
     alwaysOnTop: true,
@@ -228,6 +228,12 @@ function createPetWindow() {
   petWindow.webContents.on('context-menu', (event) => {
     event.preventDefault();
     showSettings();
+  });
+  petWindow.on('resize', () => {
+    const bounds = petWindow.getBounds();
+    if (bounds.width !== state.size || bounds.height !== state.size) {
+      petWindow.setBounds({ ...bounds, width: state.size, height: state.size });
+    }
   });
   petWindow.once('ready-to-show', () => {
     applyWindowState();
