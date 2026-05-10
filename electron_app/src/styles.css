@@ -88,6 +88,11 @@ output {
   display: grid;
   overflow: hidden;
   place-items: center;
+  cursor: move;
+}
+
+#stage.is-locked {
+  cursor: default;
 }
 
 #image-player,
@@ -117,6 +122,37 @@ output {
   text-align: center;
   font-size: 13px;
   -webkit-app-region: no-drag;
+}
+
+#window-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border: 1px dashed rgba(0, 103, 192, 0.9);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+#window-size-badge,
+#lock-badge {
+  position: absolute;
+  top: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  color: #1f1f1f;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+#window-size-badge {
+  left: 6px;
+}
+
+#lock-badge {
+  right: 6px;
 }
 
 .settings-window {

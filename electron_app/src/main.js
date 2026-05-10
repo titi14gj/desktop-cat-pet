@@ -24,6 +24,8 @@ const defaultState = {
   size: DEFAULT_SIZE,
   speed: 1,
   alwaysOnTop: true,
+  showFrame: true,
+  lockPosition: false,
   crop: {
     enabled: false,
     zoom: 1,
@@ -81,6 +83,8 @@ function normalizeState(next = {}) {
     size: clamp(next.size, MIN_SIZE, MAX_SIZE, defaultState.size),
     speed: clamp(next.speed, 0.25, 2, defaultState.speed),
     alwaysOnTop: typeof next.alwaysOnTop === 'boolean' ? next.alwaysOnTop : defaultState.alwaysOnTop,
+    showFrame: typeof next.showFrame === 'boolean' ? next.showFrame : defaultState.showFrame,
+    lockPosition: typeof next.lockPosition === 'boolean' ? next.lockPosition : defaultState.lockPosition,
     crop: normalizeCrop(next.crop)
   };
 }
@@ -114,6 +118,7 @@ function updateState(patch = {}) {
     crop: { ...state.crop, ...(patch.crop || {}) }
   };
   state = normalizeState(merged);
+  if (state.lockPosition) stopWindowDrag();
   saveState();
   applyWindowState();
   broadcastState();
@@ -308,6 +313,7 @@ ipcMain.handle('open-settings', async () => {
 
 ipcMain.handle('start-window-drag', async () => {
   if (!petWindow || petWindow.isDestroyed()) return;
+  if (state.lockPosition) return;
   const cursor = screen.getCursorScreenPoint();
   const bounds = petWindow.getBounds();
 

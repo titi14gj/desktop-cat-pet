@@ -15,6 +15,8 @@ const els = {
   playSpeed: document.getElementById('play-speed'),
   playSpeedValue: document.getElementById('play-speed-value'),
   alwaysOnTop: document.getElementById('always-on-top'),
+  showFrame: document.getElementById('show-frame'),
+  lockPosition: document.getElementById('lock-position'),
   cropEnabled: document.getElementById('crop-enabled'),
   cropZoom: document.getElementById('crop-zoom'),
   cropZoomValue: document.getElementById('crop-zoom-value'),
@@ -119,6 +121,8 @@ function renderControls() {
   els.petSize.value = state.size;
   els.playSpeed.value = state.speed;
   els.alwaysOnTop.checked = state.alwaysOnTop;
+  els.showFrame.checked = state.showFrame;
+  els.lockPosition.checked = state.lockPosition;
   els.cropEnabled.checked = state.crop.enabled;
   els.cropZoom.value = state.crop.zoom;
   els.cropOffsetX.value = state.crop.offsetX;
@@ -180,6 +184,14 @@ els.playSpeed.addEventListener('input', () => {
 
 els.alwaysOnTop.addEventListener('change', () => {
   updateState({ alwaysOnTop: els.alwaysOnTop.checked });
+});
+
+els.showFrame.addEventListener('change', () => {
+  updateState({ showFrame: els.showFrame.checked });
+});
+
+els.lockPosition.addEventListener('change', () => {
+  updateState({ lockPosition: els.lockPosition.checked });
 });
 
 els.cropEnabled.addEventListener('change', () => {

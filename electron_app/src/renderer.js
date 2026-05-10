@@ -5,7 +5,10 @@ const els = {
   stage: document.getElementById('stage'),
   imagePlayer: document.getElementById('image-player'),
   videoPlayer: document.getElementById('video-player'),
-  emptyState: document.getElementById('empty-state')
+  emptyState: document.getElementById('empty-state'),
+  windowFrame: document.getElementById('window-frame'),
+  windowSizeBadge: document.getElementById('window-size-badge'),
+  lockBadge: document.getElementById('lock-badge')
 };
 
 function mediaType(item) {
@@ -36,6 +39,14 @@ function applyCrop() {
     player.style.height = crop.enabled ? '100%' : '';
     player.style.objectFit = crop.enabled ? 'cover' : 'contain';
   }
+}
+
+function renderWindowMeta() {
+  const size = state?.size || 320;
+  els.windowFrame.hidden = !state?.showFrame;
+  els.windowSizeBadge.textContent = `${size} x ${size} px`;
+  els.lockBadge.hidden = !state?.lockPosition;
+  els.stage.classList.toggle('is-locked', Boolean(state?.lockPosition));
 }
 
 function renderPlayer() {
@@ -89,6 +100,7 @@ function render(nextState) {
   if (previousPath !== nextPath) renderPlayer();
   els.videoPlayer.playbackRate = state.speed;
   applyCrop();
+  renderWindowMeta();
   restartRotation();
 }
 
@@ -99,6 +111,7 @@ document.addEventListener('contextmenu', (event) => {
 
 els.stage.addEventListener('mousedown', (event) => {
   if (event.button !== 0) return;
+  if (state?.lockPosition) return;
   window.desktopPet.startWindowDrag();
 });
 
@@ -116,5 +129,6 @@ window.desktopPet.getState().then((nextState) => {
   state = nextState;
   renderPlayer();
   applyCrop();
+  renderWindowMeta();
   restartRotation();
 });
