@@ -1,9 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' file:; media-src 'self' file:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Desktop Cat Pet</title>
+    <title>桌面猫宠物</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,18 +15,18 @@
       <section id="stage">
         <img id="image-player" alt="" draggable="false" />
         <video id="video-player" muted loop playsinline></video>
-        <div id="empty-state">Add transparent media</div>
+        <div id="empty-state">右键添加透明素材</div>
       </section>
 
       <aside id="settings" hidden>
         <header>
-          <strong>Media Library</strong>
-          <button id="close-settings" type="button">Close</button>
+          <strong>素材库</strong>
+          <button id="close-settings" type="button">关闭</button>
         </header>
 
         <div class="toolbar">
-          <button id="add-media" type="button">Add GIF/WebM/PNG</button>
-          <button id="remove-media" type="button">Remove</button>
+          <button id="add-media" type="button">添加素材</button>
+          <button id="remove-media" type="button">移除</button>
         </div>
 
         <div class="library">
@@ -34,35 +38,35 @@
         </div>
 
         <label>
-          Playback
+          播放方式
           <select id="playback-mode">
-            <option value="single">Single</option>
-            <option value="sequential">Sequential</option>
-            <option value="shuffle">Shuffle</option>
+            <option value="single">单个播放</option>
+            <option value="sequential">顺序轮播</option>
+            <option value="shuffle">随机轮播</option>
           </select>
         </label>
 
         <label>
-          Rotate sec
+          轮播间隔
           <input id="rotate-seconds" type="number" min="5" max="3600" step="5" />
         </label>
 
         <label>
-          Size
+          窗口大小
           <input id="pet-size" type="range" min="96" max="720" />
         </label>
 
         <label>
-          Speed
+          播放速度
           <input id="play-speed" type="range" min="0.25" max="2" step="0.05" />
         </label>
 
         <label class="check">
           <input id="always-on-top" type="checkbox" />
-          Always on top
+          始终置顶
         </label>
 
-        <button id="quit" type="button">Quit</button>
+        <button id="quit" type="button">退出应用</button>
       </aside>
     </main>
     <script src="./renderer.js"></script>
