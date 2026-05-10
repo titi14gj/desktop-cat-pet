@@ -1,12 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('desktopPet', {
+  getState: () => ipcRenderer.invoke('get-state'),
+  updateState: (patch) => ipcRenderer.invoke('update-state', patch),
   chooseMedia: () => ipcRenderer.invoke('choose-media'),
-  setWindowSize: (size) => ipcRenderer.invoke('set-window-size', size),
-  setAlwaysOnTop: (enabled) => ipcRenderer.invoke('set-always-on-top', enabled),
+  openSettings: () => ipcRenderer.invoke('open-settings'),
   quit: () => ipcRenderer.invoke('quit-app'),
-  onShowSettings: (callback) => {
+  onStateUpdated: (callback) => {
     if (typeof callback !== 'function') return;
-    ipcRenderer.on('show-settings', callback);
+    ipcRenderer.on('state-updated', (_event, state) => callback(state));
   }
 });
