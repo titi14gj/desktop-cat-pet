@@ -55,7 +55,20 @@ input[type="number"] {
 }
 
 input[type="range"] {
-  width: 180px;
+  width: 150px;
+}
+
+output {
+  min-width: 54px;
+  color: #505050;
+  font-size: 12px;
+  text-align: right;
+}
+
+.range-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .pet-window {
@@ -75,7 +88,6 @@ input[type="range"] {
   display: grid;
   overflow: hidden;
   place-items: center;
-  -webkit-app-region: drag;
 }
 
 #image-player,
@@ -227,4 +239,5 @@ label,
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  transform-origin: center;
 }

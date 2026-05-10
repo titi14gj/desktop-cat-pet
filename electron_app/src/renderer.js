@@ -97,6 +97,19 @@ document.addEventListener('contextmenu', (event) => {
   window.desktopPet.openSettings();
 });
 
+els.stage.addEventListener('mousedown', (event) => {
+  if (event.button !== 0) return;
+  window.desktopPet.startWindowDrag();
+});
+
+document.addEventListener('mouseup', () => {
+  window.desktopPet.stopWindowDrag();
+});
+
+document.addEventListener('mouseleave', () => {
+  window.desktopPet.stopWindowDrag();
+});
+
 window.desktopPet.onStateUpdated(render);
 
 window.desktopPet.getState().then((nextState) => {

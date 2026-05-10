@@ -7,6 +7,8 @@ let petWindow;
 let settingsWindow;
 let tray;
 let state;
+let dragState = null;
+let dragTimer = null;
 
 const APP_NAME = '桌面猫宠物';
 const DEFAULT_SIZE = 320;
@@ -167,6 +169,12 @@ function showSettings() {
   settingsWindow.webContents.send('state-updated', state);
 }
 
+function stopWindowDrag() {
+  if (dragTimer) clearInterval(dragTimer);
+  dragTimer = null;
+  dragState = null;
+}
+
 function createTray() {
   if (tray) return;
 
@@ -212,6 +220,10 @@ function createPetWindow() {
   });
 
   petWindow.loadFile(path.join(__dirname, 'renderer.html'));
+  petWindow.webContents.on('context-menu', (event) => {
+    event.preventDefault();
+    showSettings();
+  });
   petWindow.once('ready-to-show', () => {
     applyWindowState();
     petWindow.show();
@@ -292,6 +304,34 @@ ipcMain.handle('choose-media', async () => {
 
 ipcMain.handle('open-settings', async () => {
   showSettings();
+});
+
+ipcMain.handle('start-window-drag', async () => {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  const cursor = screen.getCursorScreenPoint();
+  const bounds = petWindow.getBounds();
+
+  stopWindowDrag();
+  dragState = {
+    cursor,
+    bounds
+  };
+  dragTimer = setInterval(() => {
+    if (!dragState || !petWindow || petWindow.isDestroyed()) {
+      stopWindowDrag();
+      return;
+    }
+
+    const nextCursor = screen.getCursorScreenPoint();
+    petWindow.setPosition(
+      dragState.bounds.x + nextCursor.x - dragState.cursor.x,
+      dragState.bounds.y + nextCursor.y - dragState.cursor.y
+    );
+  }, 16);
+});
+
+ipcMain.handle('stop-window-drag', async () => {
+  stopWindowDrag();
 });
 
 ipcMain.handle('quit-app', async () => {

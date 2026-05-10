@@ -1,4 +1,5 @@
 let state = null;
+let previewPath = null;
 
 const els = {
   currentMediaName: document.getElementById('current-media-name'),
@@ -10,12 +11,17 @@ const els = {
   playbackMode: document.getElementById('playback-mode'),
   rotateSeconds: document.getElementById('rotate-seconds'),
   petSize: document.getElementById('pet-size'),
+  petSizeValue: document.getElementById('pet-size-value'),
   playSpeed: document.getElementById('play-speed'),
+  playSpeedValue: document.getElementById('play-speed-value'),
   alwaysOnTop: document.getElementById('always-on-top'),
   cropEnabled: document.getElementById('crop-enabled'),
   cropZoom: document.getElementById('crop-zoom'),
+  cropZoomValue: document.getElementById('crop-zoom-value'),
   cropOffsetX: document.getElementById('crop-offset-x'),
+  cropOffsetXValue: document.getElementById('crop-offset-x-value'),
   cropOffsetY: document.getElementById('crop-offset-y'),
+  cropOffsetYValue: document.getElementById('crop-offset-y-value'),
   resetCrop: document.getElementById('reset-crop'),
   quit: document.getElementById('quit')
 };
@@ -41,6 +47,10 @@ function currentMedia() {
   return state.media[state.currentIndex];
 }
 
+function formatDecimal(value) {
+  return Number(value).toFixed(2);
+}
+
 function updateState(patch) {
   return window.desktopPet.updateState(patch);
 }
@@ -60,20 +70,46 @@ function renderList() {
 function renderPreview() {
   const item = currentMedia();
   els.currentMediaName.textContent = item ? fileName(item) : '未选择素材';
-  els.previewImage.hidden = true;
-  els.previewVideo.hidden = true;
-  els.previewVideo.pause();
-  els.previewVideo.removeAttribute('src');
-  els.previewImage.removeAttribute('src');
-  if (!item) return;
+  const nextPreviewPath = item ? mediaPath(item) : null;
 
-  if (mediaType(item) === 'video') {
-    els.previewVideo.src = mediaSrc(item);
-    els.previewVideo.hidden = false;
-    els.previewVideo.play().catch(() => {});
-  } else {
-    els.previewImage.src = mediaSrc(item);
-    els.previewImage.hidden = false;
+  if (nextPreviewPath !== previewPath) {
+    previewPath = nextPreviewPath;
+    els.previewImage.hidden = true;
+    els.previewVideo.hidden = true;
+    els.previewVideo.pause();
+    els.previewVideo.removeAttribute('src');
+    els.previewImage.removeAttribute('src');
+
+    if (item) {
+      if (mediaType(item) === 'video') {
+        els.previewVideo.src = mediaSrc(item);
+        els.previewVideo.hidden = false;
+        els.previewVideo.play().catch(() => {});
+      } else {
+        els.previewImage.src = mediaSrc(item);
+        els.previewImage.hidden = false;
+      }
+    }
+  }
+
+  els.previewVideo.playbackRate = state.speed;
+  renderPreviewCrop();
+}
+
+function renderPreviewCrop() {
+  const crop = state?.crop || { enabled: false, zoom: 1, offsetX: 0, offsetY: 0 };
+  const zoom = crop.enabled ? crop.zoom : 1;
+  const offsetX = crop.enabled ? crop.offsetX : 0;
+  const offsetY = crop.enabled ? crop.offsetY : 0;
+  const transform = `translate(${offsetX}%, ${offsetY}%) scale(${zoom})`;
+
+  for (const player of [els.previewImage, els.previewVideo]) {
+    player.style.transform = transform;
+    player.style.maxWidth = crop.enabled ? 'none' : '100%';
+    player.style.maxHeight = crop.enabled ? 'none' : '100%';
+    player.style.width = crop.enabled ? '100%' : '';
+    player.style.height = crop.enabled ? '100%' : '';
+    player.style.objectFit = crop.enabled ? 'cover' : 'contain';
   }
 }
 
@@ -87,6 +123,11 @@ function renderControls() {
   els.cropZoom.value = state.crop.zoom;
   els.cropOffsetX.value = state.crop.offsetX;
   els.cropOffsetY.value = state.crop.offsetY;
+  els.petSizeValue.textContent = `${state.size} px`;
+  els.playSpeedValue.textContent = `${formatDecimal(state.speed)}x`;
+  els.cropZoomValue.textContent = `${formatDecimal(state.crop.zoom)}x`;
+  els.cropOffsetXValue.textContent = `${state.crop.offsetX}%`;
+  els.cropOffsetYValue.textContent = `${state.crop.offsetY}%`;
 }
 
 function render(nextState) {
