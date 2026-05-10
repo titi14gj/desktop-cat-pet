@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' file:; media-src 'self' file:; style-src 'self'; script-src 'self';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>桌面猫宠物设置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="settings-window">
+    <main id="settings-page">
+      <header class="settings-title">
+        <div>
+          <strong>桌面猫宠物</strong>
+          <span id="current-media-name">未选择素材</span>
+        </div>
+        <button id="quit" type="button">退出</button>
+      </header>
+
+      <section class="panel">
+        <div class="panel-title">
+          <strong>素材库</strong>
+          <div class="toolbar">
+            <button id="add-media" type="button">添加</button>
+            <button id="remove-media" type="button">移除</button>
+          </div>
+        </div>
+        <div class="library">
+          <ul id="media-list"></ul>
+          <div id="preview">
+            <img id="preview-image" alt="" />
+            <video id="preview-video" muted loop playsinline></video>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel control-grid">
+        <label>
+          播放方式
+          <select id="playback-mode">
+            <option value="single">单个播放</option>
+            <option value="sequential">顺序轮播</option>
+            <option value="shuffle">随机轮播</option>
+          </select>
+        </label>
+
+        <label>
+          轮播间隔
+          <input id="rotate-seconds" type="number" min="5" max="3600" step="5" />
+        </label>
+
+        <label>
+          窗口大小
+          <input id="pet-size" type="range" min="96" max="720" />
+        </label>
+
+        <label>
+          播放速度
+          <input id="play-speed" type="range" min="0.25" max="2" step="0.05" />
+        </label>
+
+        <label class="check">
+          <input id="always-on-top" type="checkbox" />
+          始终置顶
+        </label>
+      </section>
+
+      <section class="panel control-grid">
+        <div class="panel-title">
+          <strong>画面裁剪</strong>
+          <button id="reset-crop" type="button">重置</button>
+        </div>
+
+        <label class="check">
+          <input id="crop-enabled" type="checkbox" />
+          启用裁剪
+        </label>
+
+        <label>
+          缩放
+          <input id="crop-zoom" type="range" min="1" max="6" step="0.05" />
+        </label>
+
+        <label>
+          横向偏移
+          <input id="crop-offset-x" type="range" min="-100" max="100" step="1" />
+        </label>
+
+        <label>
+          纵向偏移
+          <input id="crop-offset-y" type="range" min="-100" max="100" step="1" />
+        </label>
+      </section>
+    </main>
+    <script src="./settings.js"></script>
+  </body>
+</html>
