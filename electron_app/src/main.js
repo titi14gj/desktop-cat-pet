@@ -1,15 +1,34 @@
 const { app, BrowserWindow, Tray, dialog, ipcMain, Menu, nativeImage, screen } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
 let petWindow;
+let settingsWindow;
 let tray;
+let state;
 
 const APP_NAME = '桌面猫宠物';
 const DEFAULT_SIZE = 320;
 const MIN_SIZE = 96;
 const MAX_SIZE = 720;
 const iconPath = path.join(__dirname, '..', 'assets', 'icon.ico');
+
+const defaultState = {
+  media: [],
+  currentIndex: -1,
+  playbackMode: 'single',
+  rotateSeconds: 60,
+  size: DEFAULT_SIZE,
+  speed: 1,
+  alwaysOnTop: true,
+  crop: {
+    enabled: false,
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0
+  }
+};
 
 const supportedFilters = [
   { name: '透明媒体', extensions: ['gif', 'png', 'apng', 'webm'] },
@@ -18,8 +37,85 @@ const supportedFilters = [
   { name: '透明 WebM', extensions: ['webm'] }
 ];
 
-function clampSize(size) {
-  return Math.max(MIN_SIZE, Math.min(MAX_SIZE, Number(size) || DEFAULT_SIZE));
+function statePath() {
+  return path.join(app.getPath('userData'), 'pet-state.json');
+}
+
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, number));
+}
+
+function normalizeCrop(crop = {}) {
+  return {
+    enabled: Boolean(crop.enabled),
+    zoom: clamp(crop.zoom, 1, 6, 1),
+    offsetX: clamp(crop.offsetX, -100, 100, 0),
+    offsetY: clamp(crop.offsetY, -100, 100, 0)
+  };
+}
+
+function normalizeMediaItem(item) {
+  if (typeof item === 'string') return toMediaItem(item);
+  if (!item || typeof item !== 'object' || !item.path) return null;
+  return {
+    path: item.path,
+    name: item.name || path.basename(item.path),
+    url: item.url || pathToFileURL(item.path).toString(),
+    kind: item.kind || getMediaKind(item.path)
+  };
+}
+
+function normalizeState(next = {}) {
+  const media = Array.isArray(next.media) ? next.media.map(normalizeMediaItem).filter(Boolean) : [];
+  const currentIndex = media.length === 0 ? -1 : clamp(next.currentIndex, 0, media.length - 1, 0);
+
+  return {
+    media,
+    currentIndex,
+    playbackMode: ['single', 'sequential', 'shuffle'].includes(next.playbackMode) ? next.playbackMode : defaultState.playbackMode,
+    rotateSeconds: clamp(next.rotateSeconds, 5, 3600, defaultState.rotateSeconds),
+    size: clamp(next.size, MIN_SIZE, MAX_SIZE, defaultState.size),
+    speed: clamp(next.speed, 0.25, 2, defaultState.speed),
+    alwaysOnTop: typeof next.alwaysOnTop === 'boolean' ? next.alwaysOnTop : defaultState.alwaysOnTop,
+    crop: normalizeCrop(next.crop)
+  };
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(statePath(), 'utf8'));
+    state = normalizeState({ ...defaultState, ...saved, crop: { ...defaultState.crop, ...saved.crop } });
+  } catch {
+    state = normalizeState(defaultState);
+  }
+}
+
+function saveState() {
+  fs.mkdirSync(path.dirname(statePath()), { recursive: true });
+  fs.writeFileSync(statePath(), JSON.stringify(state, null, 2));
+}
+
+function broadcastState() {
+  for (const window of [petWindow, settingsWindow]) {
+    if (window && !window.isDestroyed()) {
+      window.webContents.send('state-updated', state);
+    }
+  }
+}
+
+function updateState(patch = {}) {
+  const merged = {
+    ...state,
+    ...patch,
+    crop: { ...state.crop, ...(patch.crop || {}) }
+  };
+  state = normalizeState(merged);
+  saveState();
+  applyWindowState();
+  broadcastState();
+  return state;
 }
 
 function getMediaKind(filePath) {
@@ -35,11 +131,40 @@ function toMediaItem(filePath) {
   };
 }
 
+function applyWindowState() {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  const bounds = petWindow.getBounds();
+  petWindow.setBounds({ ...bounds, width: state.size, height: state.size });
+  petWindow.setAlwaysOnTop(Boolean(state.alwaysOnTop), 'screen-saver');
+}
+
+function placeSettingsWindow() {
+  if (!petWindow || !settingsWindow || petWindow.isDestroyed() || settingsWindow.isDestroyed()) return;
+
+  const petBounds = petWindow.getBounds();
+  const settingsBounds = settingsWindow.getBounds();
+  const display = screen.getDisplayMatching(petBounds);
+  const workArea = display.workArea;
+  const gap = 12;
+  const rightX = petBounds.x + petBounds.width + gap;
+  const leftX = petBounds.x - settingsBounds.width - gap;
+  const x = rightX + settingsBounds.width <= workArea.x + workArea.width ? rightX : Math.max(workArea.x, leftX);
+  const y = Math.max(workArea.y, Math.min(petBounds.y, workArea.y + workArea.height - settingsBounds.height));
+
+  settingsWindow.setBounds({ ...settingsBounds, x, y });
+}
+
 function showSettings() {
-  if (!petWindow) return;
-  if (petWindow.isMinimized()) petWindow.restore();
-  petWindow.show();
-  petWindow.webContents.send('show-settings');
+  if (!settingsWindow || settingsWindow.isDestroyed()) {
+    createSettingsWindow();
+    return;
+  }
+  if (settingsWindow.isMinimized()) settingsWindow.restore();
+  placeSettingsWindow();
+  settingsWindow.setAlwaysOnTop(true, 'screen-saver');
+  settingsWindow.show();
+  settingsWindow.focus();
+  settingsWindow.webContents.send('state-updated', state);
 }
 
 function createTray() {
@@ -55,10 +180,10 @@ function createTray() {
   tray.on('click', showSettings);
 }
 
-function createWindow() {
+function createPetWindow() {
   const display = screen.getPrimaryDisplay();
   const { width, height } = display.workAreaSize;
-  const size = DEFAULT_SIZE;
+  const size = state.size;
 
   petWindow = new BrowserWindow({
     title: APP_NAME,
@@ -86,9 +211,43 @@ function createWindow() {
     }
   });
 
-  petWindow.setAlwaysOnTop(true, 'screen-saver');
   petWindow.loadFile(path.join(__dirname, 'renderer.html'));
-  petWindow.once('ready-to-show', () => petWindow.show());
+  petWindow.once('ready-to-show', () => {
+    applyWindowState();
+    petWindow.show();
+    broadcastState();
+  });
+}
+
+function createSettingsWindow() {
+  settingsWindow = new BrowserWindow({
+    title: `${APP_NAME} 设置`,
+    width: 420,
+    height: 640,
+    minWidth: 380,
+    minHeight: 520,
+    show: false,
+    autoHideMenuBar: true,
+    backgroundColor: '#f9f9f9',
+    icon: iconPath,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+  settingsWindow.once('ready-to-show', () => {
+    placeSettingsWindow();
+    settingsWindow.setAlwaysOnTop(true, 'screen-saver');
+    settingsWindow.show();
+    settingsWindow.webContents.send('state-updated', state);
+  });
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
 }
 
 const gotLock = app.requestSingleInstanceLock();
@@ -103,7 +262,8 @@ if (!gotLock) {
 
   app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
-    createWindow();
+    loadState();
+    createPetWindow();
     createTray();
   });
 
@@ -114,8 +274,13 @@ if (!gotLock) {
   });
 }
 
+ipcMain.handle('get-state', async () => state);
+
+ipcMain.handle('update-state', async (_event, patch) => updateState(patch));
+
 ipcMain.handle('choose-media', async () => {
-  const result = await dialog.showOpenDialog(petWindow, {
+  showSettings();
+  const result = await dialog.showOpenDialog(settingsWindow || petWindow, {
     title: '选择透明媒体',
     buttonLabel: '添加',
     properties: ['openFile', 'multiSelections'],
@@ -125,16 +290,8 @@ ipcMain.handle('choose-media', async () => {
   return result.filePaths.map(toMediaItem);
 });
 
-ipcMain.handle('set-window-size', async (_event, size) => {
-  if (!petWindow) return;
-  const next = clampSize(size);
-  const bounds = petWindow.getBounds();
-  petWindow.setBounds({ ...bounds, width: next, height: next });
-});
-
-ipcMain.handle('set-always-on-top', async (_event, enabled) => {
-  if (!petWindow) return;
-  petWindow.setAlwaysOnTop(Boolean(enabled), 'screen-saver');
+ipcMain.handle('open-settings', async () => {
+  showSettings();
 });
 
 ipcMain.handle('quit-app', async () => {
