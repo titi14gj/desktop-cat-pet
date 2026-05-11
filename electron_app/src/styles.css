@@ -89,10 +89,12 @@ output {
   overflow: hidden;
   place-items: center;
   cursor: move;
+  -webkit-app-region: drag;
 }
 
 #stage.is-locked {
   cursor: default;
+  -webkit-app-region: no-drag;
 }
 
 #image-player,
@@ -121,7 +123,6 @@ output {
   color: #333;
   text-align: center;
   font-size: 13px;
-  -webkit-app-region: no-drag;
 }
 
 #window-frame {
@@ -145,6 +146,23 @@ output {
   font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+#settings-hotspot {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 8;
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  opacity: 0.16;
+  -webkit-app-region: no-drag;
+}
+
+#stage:hover #settings-hotspot,
+#settings-hotspot:focus-visible {
+  opacity: 0.9;
 }
 
 #window-size-badge {

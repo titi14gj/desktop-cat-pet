@@ -7,8 +7,6 @@ let petWindow;
 let settingsWindow;
 let tray;
 let state;
-let dragState = null;
-let dragTimer = null;
 
 const APP_NAME = '桌面猫宠物';
 const DEFAULT_SIZE = 320;
@@ -118,7 +116,6 @@ function updateState(patch = {}) {
     crop: { ...state.crop, ...(patch.crop || {}) }
   };
   state = normalizeState(merged);
-  if (state.lockPosition) stopWindowDrag();
   saveState();
   applyWindowState();
   broadcastState();
@@ -141,7 +138,12 @@ function toMediaItem(filePath) {
 function applyWindowState() {
   if (!petWindow || petWindow.isDestroyed()) return;
   const bounds = petWindow.getBounds();
-  petWindow.setBounds({ ...bounds, width: state.size, height: state.size });
+  const display = screen.getDisplayMatching(bounds);
+  const maxSizeForDisplay = Math.max(MIN_SIZE, Math.min(MAX_SIZE, display.workArea.width - 24, display.workArea.height - 24));
+  const size = clamp(state.size, MIN_SIZE, maxSizeForDisplay, DEFAULT_SIZE);
+  const x = Math.max(display.workArea.x, Math.min(bounds.x, display.workArea.x + display.workArea.width - size));
+  const y = Math.max(display.workArea.y, Math.min(bounds.y, display.workArea.y + display.workArea.height - size));
+  petWindow.setBounds({ ...bounds, x, y, width: size, height: size });
   petWindow.setAlwaysOnTop(Boolean(state.alwaysOnTop), 'screen-saver');
 }
 
@@ -172,12 +174,6 @@ function showSettings() {
   settingsWindow.show();
   settingsWindow.focus();
   settingsWindow.webContents.send('state-updated', state);
-}
-
-function stopWindowDrag() {
-  if (dragTimer) clearInterval(dragTimer);
-  dragTimer = null;
-  dragState = null;
 }
 
 function createTray() {
@@ -315,35 +311,6 @@ ipcMain.handle('choose-media', async () => {
 
 ipcMain.handle('open-settings', async () => {
   showSettings();
-});
-
-ipcMain.handle('start-window-drag', async () => {
-  if (!petWindow || petWindow.isDestroyed()) return;
-  if (state.lockPosition) return;
-  const cursor = screen.getCursorScreenPoint();
-  const bounds = petWindow.getBounds();
-
-  stopWindowDrag();
-  dragState = {
-    cursor,
-    bounds
-  };
-  dragTimer = setInterval(() => {
-    if (!dragState || !petWindow || petWindow.isDestroyed()) {
-      stopWindowDrag();
-      return;
-    }
-
-    const nextCursor = screen.getCursorScreenPoint();
-    petWindow.setPosition(
-      dragState.bounds.x + nextCursor.x - dragState.cursor.x,
-      dragState.bounds.y + nextCursor.y - dragState.cursor.y
-    );
-  }, 16);
-});
-
-ipcMain.handle('stop-window-drag', async () => {
-  stopWindowDrag();
 });
 
 ipcMain.handle('quit-app', async () => {

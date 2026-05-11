@@ -8,7 +8,8 @@ const els = {
   emptyState: document.getElementById('empty-state'),
   windowFrame: document.getElementById('window-frame'),
   windowSizeBadge: document.getElementById('window-size-badge'),
-  lockBadge: document.getElementById('lock-badge')
+  lockBadge: document.getElementById('lock-badge'),
+  settingsHotspot: document.getElementById('settings-hotspot')
 };
 
 function mediaType(item) {
@@ -109,18 +110,8 @@ document.addEventListener('contextmenu', (event) => {
   window.desktopPet.openSettings();
 });
 
-els.stage.addEventListener('mousedown', (event) => {
-  if (event.button !== 0) return;
-  if (state?.lockPosition) return;
-  window.desktopPet.startWindowDrag();
-});
-
-document.addEventListener('mouseup', () => {
-  window.desktopPet.stopWindowDrag();
-});
-
-document.addEventListener('mouseleave', () => {
-  window.desktopPet.stopWindowDrag();
+els.settingsHotspot.addEventListener('click', () => {
+  window.desktopPet.openSettings();
 });
 
 window.desktopPet.onStateUpdated(render);
